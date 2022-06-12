@@ -1,6 +1,14 @@
 # Sample Dapp 
 Sample Dapp that deploys and transacts ARC3 NFTs
 
+## Pinning content using Pinata
+Use the following methods to pin files/folders to IPFS
+
+- [pinFileToIPFS](https://www.npmjs.com/package/@pinata/sdk#pinFileToIPFS) - Pins a file to IPFS.
+- [pinFromFS](https://www.npmjs.com/package/@pinata/sdk#pinFromFS) - Pins a directory to IPFS. 
+
+For `pinFromFS`, windows users might encounter an issue where files are pinned to the wrong directory. Additional sub directories were created (i.e. `ipfs://<content_id>/Users/<usersname>/<repo directory>/assets/nft/<asset filename>`) instead of `ipfs://<content_id>/<asset_filename>`. You might need to tweak the image url accordingly in your JSON metadata.
+
 ## Setup instructions
 
 ### Install packages
