@@ -42,10 +42,6 @@ export default {
             const algorand = window.algorand;
 
             if (typeof algorand !== "undefined") {
-                // const res = await algorand.enable({
-                //     genesisID: "sandnet-v1",
-                //     genesisHash: "vZwD3skulbb2vzcHXm6CDj/uav2hzbezW90mDkf20UI="
-                // });
                 const res = await algorand.enable();
                 
                 // use non-creator address
