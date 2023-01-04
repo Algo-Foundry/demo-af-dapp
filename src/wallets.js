@@ -5,29 +5,24 @@ import MyAlgoConnect from "@randlabs/myalgo-connect";
 // Contains a list of methods to send transactions via different wallet connectors
 
 const sendAlgoSignerTransaction = async (txn, algodClient) => {
-    const AlgoSigner = window.AlgoSigner;
-
-    if (typeof AlgoSigner !== "undefined") {
+    const algorand = window.algorand;
+    if (typeof algorand !== "undefined") {        
         try {
             // Get the binary and base64 encode it
             let binaryTx = txn.toByte();
-            let base64Tx = AlgoSigner.encoding.msgpackToBase64(binaryTx);
+            let base64Tx = algorand.encoding.msgpackToBase64(binaryTx);
 
-            let signedTxs = await AlgoSigner.signTxn([
+            let signedTxs = await algorand.signTxns([
                 {
                     txn: base64Tx,
                 },
             ]);
 
-            // Get the base64 encoded signed transaction and convert it to binary
-            let binarySignedTx = AlgoSigner.encoding.base64ToMsgpack(
-                signedTxs[0].blob
-            );
+            let binarySignedTxn = algorand.encoding.base64ToMsgpack(signedTxs[0]);
+            const response = await algodClient.sendRawTransaction(binarySignedTxn).do();
 
-            const response = await algodClient
-                .sendRawTransaction(binarySignedTx)
-                .do();
-            console.log(response);
+            // wait for blockchain confirmation within 4 rounds
+            await algosdk.waitForConfirmation(algodClient, response.txId, 4);
 
             return response;
         } catch (err) {
@@ -71,6 +66,9 @@ const sendWalletConnectTransaction = async (connector, txn, algodClient) => {
             .do();
         console.log(response);
 
+        // wait for blockchain confirmation within 4 rounds
+        await algosdk.waitForConfirmation(algodClient, response.txId, 4);
+
         return response;
     } catch (err) {
         console.error(err);
@@ -86,6 +84,9 @@ const sendMyAlgoTransaction = async (txn, algodClient) => {
             .sendRawTransaction(signedTxn.blob)
             .do();
         console.log(response);
+
+        // wait for blockchain confirmation within 4 rounds
+        await algosdk.waitForConfirmation(algodClient, response.txId, 4);
 
         return response;
     } catch (err) {

@@ -6,16 +6,10 @@
                 MyAlgo
             </button>
             <button
-                @click="connectToAlgoSigner('Localhost')"
+                @click="connectToAlgoSigner"
                 class="btn btn-primary"
             >
-                AlgoSigner (Localhost)
-            </button>
-            <button
-                @click="connectToAlgoSigner('TestNet')"
-                class="btn btn-primary"
-            >
-                AlgoSigner (TestNet)
+                AlgoSigner
             </button>
             <button
                 @click="connectToWalletConnect"
@@ -50,14 +44,14 @@
 <script>
 import MyAlgoConnect from "@randlabs/myalgo-connect";
 import WalletConnect from "@walletconnect/client";
-import QRCodeModal from "@walletconnect/qrcode-modal";
+import QRCodeModal from "algorand-walletconnect-qrcode-modal";
 
 export default {
     data() {
         return {
             connection: "", // myalgo | walletconnect | algosigner
             connector: null, // wallet connector obj
-            network: "", // Localhost | TestNet
+            network: "SandNet", // Localhost | TestNet
             sender: "", // connected account
             receiver: "",
         };
@@ -78,24 +72,15 @@ export default {
                 console.error(err);
             }
         },
-        async connectToAlgoSigner(network) {
-            this.network = network;
-            const AlgoSigner = window.AlgoSigner;
+        async connectToAlgoSigner() {
+            const algorand = window.algorand;
 
-            if (typeof AlgoSigner !== "undefined") {
-                await AlgoSigner.connect();
-                const accounts = await AlgoSigner.accounts({
-                    ledger: this.network,
-                });
-
-                if (this.network === "Localhost") {
-                    // use non-creator address
-                    this.sender = accounts[1].address;
-                    this.receiver = "";
-                } else {
-                    this.sender = accounts[0].address;
-                    this.receiver = accounts[1].address;
-                }
+            if (typeof algorand !== "undefined") {
+                const res = await algorand.enable();
+                
+                // use non-creator address
+                this.sender = res.accounts[1];
+                this.receiver = res.accounts[0];
 
                 this.connection = "algosigner";
             }

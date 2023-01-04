@@ -22,7 +22,7 @@ async function run(runtimeEnv, deployer) {
             index: index + 1, // 1-based index
             name: `${assetNames[index]} #${index + 1}`, // e.g Corgi #1
             description: `Asset ${index + 1}/${assetNames.length}`,
-            image_mimetype: mime.getType(file),
+            image_mimetype: mime.lookup(file),
             file: file,
         };
         return asset;

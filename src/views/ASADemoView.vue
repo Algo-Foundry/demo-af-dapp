@@ -2,11 +2,11 @@
     <div id="sendalgo-app">
         <h3>Select wallet</h3>
         <div class="d-grid gap-2 mb-5">
-            <button @click="connectToAlgoSigner('Localhost')" class="btn btn-primary">
-                AlgoSigner (Localhost)
+            <button @click="connectToAlgoSigner()" class="btn btn-primary">
+                AlgoSigner (Sandbox)
             </button>
         </div>
-        <div v-if="this.sender !== ''" class="mb-5">
+        <div v-if="this.account !== ''" class="mb-5">
             <h3>Connected</h3>
             <p>
                 Connection: <span>{{ this.connection }}</span>
@@ -15,14 +15,14 @@
                 Network: <span>{{ this.network }}</span>
             </p>
             <p>
-                Account: <span>{{ this.sender }}</span>
+                Account: <span>{{ this.account }}</span>
             </p>
         </div>
         <send-asset-form
-            v-if="this.connection === 'algosigner' && this.network === 'Localhost'"
+            v-if="this.connection === 'algosigner'"
             :connection="this.connection"
             :network="this.network"
-            :receiver="this.sender"
+            :receiver="this.account"
         />
     </div>
 </template>
@@ -33,29 +33,23 @@ export default {
         return {
             connection: "", // myalgo | walletconnect | algosigner
             connector: null, // wallet connector obj
-            network: "", // Localhost | TestNet
-            sender: "", // connected account
-            receiver: "",
+            network: 'SandNet', // network name
+            account: "", // connected account
         };
     },
     methods: {
-        async connectToAlgoSigner(network) {
-            this.network = network;
-            const AlgoSigner = window.AlgoSigner;
+        async connectToAlgoSigner() {
+            const algorand = window.algorand;
 
-            if (typeof AlgoSigner !== "undefined") {
-                await AlgoSigner.connect();
-                const accounts = await AlgoSigner.accounts({
-                    ledger: this.network,
-                });
-
-                if (this.network === "Localhost") {
-                    // use non-creator address
-                    this.sender = accounts[1].address;
-                } else {
-                    this.sender = accounts[0].address;
-                    this.receiver = accounts[1].address;
-                }
+            if (typeof algorand !== "undefined") {
+                // const res = await algorand.enable({
+                //     genesisID: "sandnet-v1",
+                //     genesisHash: "vZwD3skulbb2vzcHXm6CDj/uav2hzbezW90mDkf20UI="
+                // });
+                const res = await algorand.enable();
+                
+                // use non-creator address
+                this.account = res.accounts[1];
 
                 this.connection = "algosigner";
             }

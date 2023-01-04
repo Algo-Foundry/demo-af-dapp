@@ -69,22 +69,27 @@ export default {
         async handleReceiveTokens() {
             const assetId = this.acsCoin.assetIndex;
 
-            await this.doAssetOptIn(this.receiver, assetId);
-            await this.doAssetTransfer(
-                this.creator,
-                this.receiver,
-                assetId,
-                this.amount_acs
-            );
+            const hasOptedIn = await this.doAssetOptIn(this.receiver, assetId);
+            if (hasOptedIn) {
+                await this.doAssetTransfer(
+                    this.creator,
+                    this.receiver,
+                    assetId,
+                    this.amount_acs
+                );
+            }
         },
         async handleReceiveNFT(thisNFT) {
-            await this.doAssetOptIn(this.receiver, thisNFT.assetIndex);
-            await this.doAssetTransfer(
-                this.creator,
-                this.receiver,
-                thisNFT.assetIndex,
-                1
-            );
+            const hasOptedIn = await this.doAssetOptIn(this.receiver, thisNFT.assetIndex);
+            if (hasOptedIn) {
+                await this.doAssetTransfer(
+                    this.creator,
+                    this.receiver,
+                    thisNFT.assetIndex,
+                    1
+                );
+            }
+            
         },
         async handleReturnNFT(thisNFT) {
             await this.doAssetTransfer(
@@ -114,7 +119,7 @@ export default {
                     assetId,
                     this.network
                 );
-                if (optInResponse.txId !== undefined) {
+                if (optInResponse && optInResponse.txId !== undefined) {
                     optedIn = true;
                 }
             } else {
@@ -124,6 +129,8 @@ export default {
             if (!optedIn) {
                 console.error("Receiver hasn't opted in to receive the asset.");
             }
+
+            return optedIn;
         },
         async doAssetTransfer(sender, receiver, assetId, amount) {
             // clear notification
@@ -163,7 +170,7 @@ export default {
                 // get json metadata file
                 const url = nft[1].assetDef.url.replace(
                     "ipfs://",
-                    "https://gateway.pinata.cloud/ipfs/"
+                    "https://ipfs.io/ipfs/"
                 );
 
                 const response = await axios.get(url);
