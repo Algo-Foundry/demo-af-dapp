@@ -33,7 +33,7 @@ export default {
         return {
             connection: "", // myalgo | walletconnect | algosigner
             connector: null, // wallet connector obj
-            network: 'SandNet', // network name
+            network: "", // network name
             account: "", // connected account
         };
     },

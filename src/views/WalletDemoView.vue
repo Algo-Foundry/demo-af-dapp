@@ -51,7 +51,7 @@ export default {
         return {
             connection: "", // myalgo | walletconnect | algosigner
             connector: null, // wallet connector obj
-            network: "", // Localhost | TestNet
+            network: "", // network name
             sender: "", // connected account
             receiver: "",
         };
