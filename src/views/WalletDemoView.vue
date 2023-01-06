@@ -51,7 +51,7 @@ export default {
         return {
             connection: "", // myalgo | walletconnect | algosigner
             connector: null, // wallet connector obj
-            network: "SandNet", // Localhost | TestNet
+            network: "", // Localhost | TestNet
             sender: "", // connected account
             receiver: "",
         };
@@ -73,20 +73,18 @@ export default {
             }
         },
         async connectToAlgoSigner() {
-            const algorand = window.algorand;
-            if (typeof algorand !== "undefined") {
-                // there are issues fetching the correct genesisID from sandbox
-                const res = await algorand.enable();
+            // force connection to sandbox
+            this.network = "SandNet";
+            const AlgoSigner = window.AlgoSigner;
 
-                if (res.genesisID === "testnet-v1.0") {
-                    this.network = "TestNet"
-                } else {
-                    this.network = "SandNet"
-                }
-                
-                // use non-creator address
-                this.sender = res.accounts[1];
-                this.receiver = res.accounts[0];
+            if (typeof AlgoSigner !== "undefined") {
+                await AlgoSigner.connect();
+                const accounts = await AlgoSigner.accounts({
+                    ledger: this.network,
+                });
+
+                this.sender = accounts[1].address;
+                this.receiver = accounts[0].address;
 
                 this.connection = "algosigner";
             }

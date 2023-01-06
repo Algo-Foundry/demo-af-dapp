@@ -39,20 +39,17 @@ export default {
     },
     methods: {
         async connectToAlgoSigner() {
-            const algorand = window.algorand;
+            // force connection to sandbox
+            this.network = "SandNet";
+            const AlgoSigner = window.AlgoSigner;
 
-            if (typeof algorand !== "undefined") {
-                // there are issues fetching the correct genesisID from sandbox
-                const res = await algorand.enable();
+            if (typeof AlgoSigner !== "undefined") {
+                await AlgoSigner.connect();
+                const accounts = await AlgoSigner.accounts({
+                    ledger: this.network,
+                });
 
-                if (res.genesisID === "testnet-v1.0") {
-                    this.network = "TestNet"
-                } else {
-                    this.network = "SandNet"
-                }
-                
-                // use non-creator address
-                this.account = res.accounts[1];
+                this.account = accounts[1].address;
 
                 this.connection = "algosigner";
             }
