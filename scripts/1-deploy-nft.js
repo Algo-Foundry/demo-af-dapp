@@ -57,11 +57,11 @@ async function run(runtimeEnv, deployer) {
         const metadata = {
             name: asset.name,
             description: asset.description,
-            image: `ipfs://${result.IpfsHash}/${asset.file}`,
+            image: `ipfs://${result.IpfsHash}/${asset.file}`, // update url here for windows users
             image_integrity: `sha256-${integrity.base64}`,
             image_mimetype: asset.image_mimetype,
             properties: {
-                file_url: `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}/${asset.file}`,
+                file_url: `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}/${asset.file}`, // update url here for windows users
                 file_url_integrity: `sha256-${integrity.base64}`,
                 file_url_mimetype: asset.image_mimetype,
             },
