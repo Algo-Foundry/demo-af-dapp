@@ -10,7 +10,7 @@
             <a :href="explorerURL" target="_blank">{{ this.acsTxId }}</a>
         </div>
         <form
-            v-if="this.receiver !== ''"
+            v-if="this.selectedAccount !== ''"
             action="#"
             @submit.prevent="handleReceiveTokens"
         >
@@ -44,19 +44,23 @@ import asa from "../asa.js";
 import acsCoinConfig from "../artifacts/0-deploy-assets.js.cp.yaml"; //asc coin
 import nftConfig from "../artifacts/1-deploy-nft.js.cp.yaml"; //nft
 import axios from "axios";
+import WalletConnect from "@walletconnect/client";
+import { PeraWalletConnect } from "@perawallet/connect";
+import { DeflyWalletConnect } from "@blockshake/defly-connect";
 
 export default {
     props: {
         connection: String,
         network: String,
-        receiver: String,
+        walletclient: [WalletConnect, PeraWalletConnect, DeflyWalletConnect],
+        selectedAccount: String,
     },
     data() {
         return {
             acsTxId: "",
             amount_acs: 1,
             explorerURL: "",
-            acsCoin: acsCoinConfig.default.asa.acsCoinASA,
+            acsCoinId: "",
             nfts: [],
             creator: process.env.VUE_APP_CREATOR_ADDR,
         };
@@ -67,24 +71,22 @@ export default {
             this.setExplorerURL(value);
         },
         async handleReceiveTokens() {
-            const assetId = this.acsCoin.assetIndex;
-
-            const hasOptedIn = await this.doAssetOptIn(this.receiver, assetId);
+            const hasOptedIn = await this.doAssetOptIn(this.selectedAccount, this.acsCoinId);
             if (hasOptedIn) {
                 await this.doAssetTransfer(
                     this.creator,
-                    this.receiver,
-                    assetId,
+                    this.selectedAccount,
+                    this.acsCoinId,
                     this.amount_acs
                 );
             }
         },
         async handleReceiveNFT(thisNFT) {
-            const hasOptedIn = await this.doAssetOptIn(this.receiver, thisNFT.assetIndex);
+            const hasOptedIn = await this.doAssetOptIn(this.selectedAccount, thisNFT.assetIndex);
             if (hasOptedIn) {
                 await this.doAssetTransfer(
                     this.creator,
-                    this.receiver,
+                    this.selectedAccount,
                     thisNFT.assetIndex,
                     1
                 );
@@ -93,7 +95,7 @@ export default {
         },
         async handleReturnNFT(thisNFT) {
             await this.doAssetTransfer(
-                this.receiver,
+                this.selectedAccount,
                 this.creator,
                 thisNFT.assetIndex,
                 1
@@ -117,7 +119,9 @@ export default {
                 const optInResponse = await asa.assetOptIn(
                     receiver,
                     assetId,
-                    this.network
+                    this.network,
+                    this.connection,
+                    this.walletclient
                 );
                 if (optInResponse && optInResponse.txId !== undefined) {
                     optedIn = true;
@@ -141,7 +145,9 @@ export default {
                 receiver,
                 assetId,
                 amount,
-                this.network
+                this.network,
+                this.connection,
+                this.walletclient
             );
 
             if (response !== undefined) {
@@ -163,37 +169,48 @@ export default {
                     break;
             }
         },
+        setFungibleTokenId() {
+            this.acsCoinId = this.network === "SandNet" ? acsCoinConfig.default.asa.acsCoinASA.assetIndex : acsCoinConfig.testnet.asa.acsCoinASA.assetIndex;
+        },
+        setCreator() {
+            this.creator = this.network === "SandNet" ? process.env.VUE_APP_CREATOR_ADDR : process.env.VUE_APP_CREATOR_ADDR_TESTNET;
+        },
         async setNFTData() {
-            const nftData = nftConfig.default.asa;
+            const nftData = this.network === "SandNet" ? nftConfig.default.asa : nftConfig.testnet.asa;
 
             this.nfts = await Promise.all(nftData.map( async (nft) => {
-                // get json metadata file
-                const url = nft[1].assetDef.url.replace(
-                    "ipfs://",
-                    "https://ipfs.io/ipfs/"
-                );
+                let assetName = nft[0];
+                let assetData = nft[1];
+                
+                if (this.network === "SandNet") {
+                    assetName = nft[1][0];
+                    assetData = nft[1][1];
+                }
 
+                const url = assetData.assetDef.url.replace(
+                    "ipfs://",
+                    "https://cloudflare-ipfs.com/ipfs/"
+                );
+                
                 const response = await axios.get(url);
                 const jsonMetadata = response.data;
-
-                // get image url
+                
                 const imgUrl = jsonMetadata.image.replace(
                     "ipfs://",
                     "https://gateway.pinata.cloud/ipfs/"
                 );
 
-                // check metadata
                 const validHash = asa.checkMetadataHash(
-                    nft[1].assetDef.metadataHash,
-                    nft[1].assetDef.url
+                    assetData.assetDef.metadataHash,
+                    assetData.assetDef.url
                 );
                 
                 return {
-                    name: nft[0],
-                    ...nft[1].assetDef,
-                    assetIndex: nft[1].assetIndex,
-                    creator: nft[1].creator,
-                    txId: nft[1].txId,
+                    name: assetName,
+                    ...assetData.assetDef,
+                    assetIndex: assetData.assetIndex,
+                    creator: assetData.creator,
+                    txId: assetData.txId,
                     jsonMetadata,
                     imgUrl,
                     validHash
@@ -203,6 +220,8 @@ export default {
     },
     async mounted() {
         await this.setNFTData();
+        this.setFungibleTokenId();
+        this.setCreator();
     },
 };
 </script>

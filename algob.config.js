@@ -79,6 +79,24 @@ let purestakeTestNetCfg = {
   },
 };
 
+// testnet
+let accounts_testnet = mkAccounts([
+  {
+    // This account is created using `make setup-master-account` command from our
+    // `/infrastructure` directory. It already has many ALGOs
+    name: "master",
+    addr: process.env.VUE_APP_CREATOR_ADDR_TESTNET,
+    mnemonic: process.env.VUE_APP_CREATOR_MNEMONIC_TESTNET,
+  }
+]);
+
+let testnetCfg = {
+  host: process.env.VUE_APP_ALGOD_ADDR_TESTNET,
+  port: process.env.VUE_APP_ALGOD_PORT_TESTNET,
+  token: process.env.VUE_APP_ALGOD_TOKEN_TESTNET,
+  accounts: accounts_testnet
+};
+
 // You can also use Environment variables to get Algod credentials
 // Please check https://github.com/scale-it/algo-builder/blob/master/docs/algob-config.md#credentials for more details and more methods.
 // Method 1
@@ -98,5 +116,6 @@ module.exports = {
     default: defaultCfg,
     prod: envCfg,
     purestake: purestakeTestNetCfg,
+    testnet: testnetCfg
   },
 };

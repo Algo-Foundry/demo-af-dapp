@@ -3,7 +3,7 @@ import { getAlgodClient } from "./client.js";
 import wallets from "./wallets.js";
 import { convertByte32ToIpfsCidV0 } from "../scripts/helpers/ipfs2bytes32.js";
 
-const assetOptIn = async (receiverAddr, assetId, network) => {
+const assetOptIn = async (receiverAddr, assetId, network, connection, connector) => {
     if (!(receiverAddr && assetId)) {
         console.error("error", receiverAddr, assetId);
         return;
@@ -14,21 +14,17 @@ const assetOptIn = async (receiverAddr, assetId, network) => {
     // create suggested parameters
     const suggestedParams = await algodClient.getTransactionParams().do();
 
-    let txn = algosdk.makeAssetTransferTxnWithSuggestedParams(
-        receiverAddr,
-        receiverAddr,
-        undefined,
-        undefined,
-        0,
-        undefined,
-        assetId,
+    let txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+        from: receiverAddr,
+        to: receiverAddr,
+        assetIndex: assetId,
         suggestedParams
-    );
+    });
 
-    return await wallets.sendAlgoSignerTransaction(txn, algodClient);
+    return await signAndSubmitTxns(connection, connector, txn, network);
 };
 
-const transferAsset = async (senderAddr, receiverAddr, assetId, amount, network) => {
+const transferAsset = async (senderAddr, receiverAddr, assetId, amount, network, connection, connector) => {
     // convert to integer
     const amountParsed = parseInt(amount);
     if (
@@ -44,18 +40,15 @@ const transferAsset = async (senderAddr, receiverAddr, assetId, amount, network)
     // create suggested parameters
     const suggestedParams = await algodClient.getTransactionParams().do();
 
-    let txn = algosdk.makeAssetTransferTxnWithSuggestedParams(
-        senderAddr,
-        receiverAddr,
-        undefined,
-        undefined,
-        amountParsed,
-        undefined,
-        assetId,
+    let txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+        from: senderAddr,
+        to: receiverAddr,
+        assetIndex: assetId,
+        amount: amountParsed,
         suggestedParams
-    );
+    });
 
-    return await wallets.sendAlgoSignerTransaction(txn, algodClient);
+    return await signAndSubmitTxns(connection, connector, txn, network);
 };
 
 const getAccountInfo = async (address, network) => {
@@ -79,6 +72,23 @@ const checkMetadataHash = (uint8ArrHash, assetURL) => {
 
     return cid_from_assetURL === cid;
 }
+
+const signAndSubmitTxns = async (connection, connector, txn, network) => {
+    const algodClient = getAlgodClient(network);
+
+    switch (connection) {
+        case "perawallet":
+            return await wallets.sendPeraWalletTransaction(connector, txn, algodClient);
+        case "walletconnect":
+            return await wallets.sendWalletConnectTransaction(connector, txn, algodClient);
+        case "deflywallet":
+            return await wallets.sendDeflyWalletTransaction(connector, txn, algodClient);
+        case "sandbox":
+            return await wallets.sendSandboxTransaction(txn, algodClient);
+        default:
+            return;
+    }
+};
 
 export default {
     assetOptIn,
