@@ -181,11 +181,6 @@ export default {
             this.nfts = await Promise.all(nftData.map( async (nft) => {
                 let assetName = nft[0];
                 let assetData = nft[1];
-                
-                if (this.network === "SandNet") {
-                    assetName = nft[1][0];
-                    assetData = nft[1][1];
-                }
 
                 const url = assetData.assetDef.url.replace(
                     "ipfs://",
