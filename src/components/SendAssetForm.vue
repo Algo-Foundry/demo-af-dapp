@@ -125,6 +125,7 @@ export default {
                 );
                 if (optInResponse && optInResponse.txId !== undefined) {
                     optedIn = true;
+                    this.setExplorerURL(optInResponse.txId);
                 }
             } else {
                 optedIn = true;
