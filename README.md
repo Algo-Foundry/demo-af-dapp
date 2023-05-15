@@ -1,5 +1,5 @@
 # Sample Dapp 
-Sample Dapp that deploys and transacts ARC3 NFTs
+Sample Dapp that deploys and transacts ARC3 NFTs. When connecting to the wallet, please select both creator and receiver account. They are required to sign the necessary transactions for the transfer of NFTs.
 
 ## Pinning content using Pinata
 Use the following methods to pin files/folders to IPFS
